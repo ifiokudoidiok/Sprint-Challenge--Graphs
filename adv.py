@@ -5,6 +5,18 @@ from world import World
 import random
 from ast import literal_eval
 
+class Queue():
+    def __init__(self):
+        self.queue = []
+    def enqueue(self, value):
+        self.queue.append(value)
+    def dequeue(self):
+        if self.size() > 0:
+            return self.queue.pop(0)
+        else:
+            return None
+    def size(self):
+        return len(self.queue)
 # Load world
 world = World()
 
@@ -29,7 +41,75 @@ player = Player(world.starting_room)
 # traversal_path = ['n', 'n']
 traversal_path = []
 
+#create a blank dictionary called map
+map = {}
+# create explore method
+def explore(player, moves):
+# Make it into a bfs
+    #initialize Queue
+    queue = Queue()
+    #add starting room to queue
+    queue.enqueue([player.current_room.id])
+    #initialize visited
+    visited = set()
+    #while the queue has places to go
+    while queue.size() > 0:
+        #as exploration continues, remove from queue
+        route = queue.dequeue()
+        #grab the last visited room
+        last_visited = route[-1]
+        #if the last room isn't in visited, add to visited
+        if last_visited not in visited:
+            visited.add(last_visited)
+        # note the exits
+            for exit in map[last_visited]:
+                #if the exit in the map dict is ?, return route
+                if map[last_visited][exit] == '?':
+                    return route
+                #otherwise, get rid of the explored route
+                else:
+                    been_there = list(route)
+                    been_there.append(map[last_visited][exit])
+                    queue.enqueue(been_there)
+    return [] #***COME BACK AND RETURN VISITED
+#create method to check for exits that haven't been tried
+def untried(player, new_moves):
+    #set exits
+    exits = map[player.current_room.id]
+    #create empty list for untried exits to be used later
+    untried = []
+    #check exits of the current room for unexplored areas
+    for direction in exits:
+        if exits[direction] == "?":
+            #add to untried so they can be explored
+            untried.append(direction)
+    #if there aren't any untried exits
+    if len(untried) == 0:
+        #explore until you find a room with unexplored exits
+        unexplored = explore(player, new_moves)
+        #set new room to the player's current room
+        new_room = player.current_room.id
+        #go through each unexplored room
+        for room in unexplored:
+            #then in that room, check for unexplored exits and add them to new moves
+            for direction in map[new_room]:
+                if map[new_room][direction] == room:
+                    new_moves.enqueue(direction)
+                    new_room = room
+                    break
+    #otherwise, try a random untried exit
+    else:
+        new_moves.enqueue(untried[random.randint(0, len(untried) -1)])
 
+#create moves that only use untried exits
+#create an unexplored room dictionary
+unexplored_room = {}
+#go through the exits in the current room
+for direction in player.current_room.get_exits():
+    #add all ? exits to unexplored_room
+    unexplored_room[direction] = "?"
+    #the starting room should always be an unexplored room
+map[world.starting_room.id] = unexplored_room
 
 # TRAVERSAL TEST
 visited_rooms = set()
