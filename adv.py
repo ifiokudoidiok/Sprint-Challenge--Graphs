@@ -22,10 +22,10 @@ world = World()
 
 
 # You may uncomment the smaller graphs for development and testing purposes.
-# map_file = "maps/test_line.txt"
-# map_file = "maps/test_cross.txt"
-# map_file = "maps/test_loop.txt"
-# map_file = "maps/test_loop_fork.txt"
+map_file = "maps/test_line.txt"
+map_file = "maps/test_cross.txt"
+map_file = "maps/test_loop.txt"
+map_file = "maps/test_loop_fork.txt"
 map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
@@ -118,6 +118,34 @@ untried(player, new_moves)
 
 #set the reverse directions, just like in the adventure game
 reverse_dir = {"n": "s", "s": "n", "e": "w", "w": "e"}
+
+#while new_moves has items in it
+while new_moves.size() > 0:
+    #set the starting room
+    start = player.current_room.id
+    #grab a direction from new_moves
+    move = new_moves.dequeue()
+    #move that direction
+    player.travel(move)
+    #add that to traversal_path
+    traversal_path.append(move)
+    #set the player's new room to a variable
+    next_room = player.current_room.id
+    #set the map entry for the move to next_room
+    map[start][move] = next_room
+    #if it isn't in the map
+    if next_room not in map:
+        map[next_room] = {}
+        #for each exit found in the current room
+        for exit in player.current_room.get_exits():
+            #set each unexplored exit to ?
+            map[next_room][exit] = "?"
+    #map the reverse compass and set it to the next start
+    map[next_room][reverse_dir[move]] = start
+    #if there are no moves left in new_moves
+    if new_moves.size() == 0:
+        #run untried again
+        untried(player, new_moves)
 
 
 # TRAVERSAL TEST
